@@ -1,3 +1,5 @@
+CREATE TYPE user_role AS ENUM ('admin', 'pm');
+
 CREATE TABLE users (
     id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     workspace_id  UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
