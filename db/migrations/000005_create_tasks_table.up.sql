@@ -1,3 +1,5 @@
+CREATE TYPE task_status AS ENUM ('pending', 'completed');
+
 CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     challenge_id UUID NOT NULL,
