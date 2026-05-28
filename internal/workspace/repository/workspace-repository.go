@@ -2,13 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ZakSlinin/sber-practice-backend/internal/workspace/models"
 	"gorm.io/gorm"
 )
 
 type WorkspaceRepository interface {
-	Create(ctx context.Context, workspace models.Workspace) (*models.Workspace, error)
+	Create(ctx context.Context, workspace *models.Workspace) (*models.Workspace, error)
 	GetByName(ctx context.Context, name string) (*models.Workspace, error)
 }
 
@@ -31,9 +32,9 @@ func (r *PostgresWorkspaceRepository) Create(ctx context.Context, workspace *mod
 
 func (r *PostgresWorkspaceRepository) GetByName(ctx context.Context, name string) (*models.Workspace, error) {
 	var workspace models.Workspace
-	result := r.db.WithContext(ctx).Where(&workspace, "name = ?", name)
+	result := r.db.WithContext(ctx).Where("name = ?", name).First(&workspace)
 	if result.Error != nil {
-		if result.RowsAffected == 0 {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("workspace %s not found", name)
 		}
 		return nil, result.Error
