@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/ZakSlinin/sber-practice-backend/internal/auth/models"
 	"github.com/google/uuid"
@@ -32,9 +33,9 @@ func (r *PostgresAuthRepository) Create(ctx context.Context, user *models.User) 
 
 func (r *PostgresAuthRepository) GetByEmailAndWorkspace(ctx context.Context, email string, workspaceID uuid.UUID) (*models.User, error) {
 	var user models.User
-	result := r.db.WithContext(ctx).Where("email = ? AND workspace_id = ?", email, workspaceID).Find(user)
+	result := r.db.WithContext(ctx).Where("email = ? AND workspace_id = ?", email, workspaceID).First(&user)
 	if result.Error != nil {
-		if result.RowsAffected == 0 {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, result.Error
