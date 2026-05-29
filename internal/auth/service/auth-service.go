@@ -2,13 +2,16 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/ZakSlinin/sber-practice-backend/internal/auth/models"
 	"github.com/ZakSlinin/sber-practice-backend/internal/auth/repository"
 	models2 "github.com/ZakSlinin/sber-practice-backend/internal/workspace/models"
 	repository2 "github.com/ZakSlinin/sber-practice-backend/internal/workspace/repository"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"os"
 	"time"
 )
 
@@ -84,4 +87,38 @@ func (s *AuthService) GetByEmailAndWorkspace(ctx context.Context, email string, 
 	}
 
 	return user, nil
+}
+
+func (s *AuthService) Login(ctx context.Context, req *models.LoginRequest) (string, error) {
+	workspace, err := s.workspaceRepo.GetByName(ctx, req.WorkspaceName)
+	if err != nil {
+		return "", fmt.Errorf("workspace not found")
+	}
+
+	user, err := s.repo.GetByEmailAndWorkspace(ctx, req.Email, workspace.ID)
+	if err != nil {
+		return "", fmt.Errorf("invalid credentials")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		return "", fmt.Errorf("invalid credentials")
+	}
+
+	token, err := generateJWT(user)
+	if err != nil {
+		return "", fmt.Errorf("could not generate token")
+	}
+
+	return token, nil
+}
+
+func generateJWT(user *models.User) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id":      user.ID,
+		"workspace_id": user.WorkspaceID,
+		"role":         user.Role,
+		"exp":          time.Now().Add(24 * time.Hour).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }

@@ -20,6 +20,14 @@ type RegisterRequest struct {
 	Name          string `json:"name"`
 }
 
+type RegisterResponse struct {
+	ID          uuid.UUID `json:"id"`
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	Email       string    `json:"email"`
+	Name        string    `json:"name"`
+	Role        string    `json:"role"`
+}
+
 type LoginRequest struct {
 	WorkspaceName string `json:"workspace_name"`
 	Email         string `json:"email"`
