@@ -10,7 +10,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"os"
 	"time"
 )
@@ -25,12 +24,6 @@ func NewAuthService(repo *repository.PostgresAuthRepository, workspace *reposito
 		repo:          repo,
 		workspaceRepo: workspace,
 	}
-}
-
-type ErrorMessage struct {
-	Error     string                 `json:"error"`
-	Message   string                 `json:"message"`
-	Timestamp *timestamppb.Timestamp `json:"timestamp"`
 }
 
 func (s *AuthService) Register(ctx context.Context, req *models.RegisterRequest) (*models.User, error) {
@@ -72,18 +65,14 @@ func (s *AuthService) Register(ctx context.Context, req *models.RegisterRequest)
 	return s.repo.Create(ctx, user)
 }
 
-func (s *AuthService) GetByEmailAndWorkspace(ctx context.Context, email string, workspaceID uuid.UUID) (*models.User, *ErrorMessage) {
+func (s *AuthService) GetByEmailAndWorkspace(ctx context.Context, email string, workspaceID uuid.UUID) (*models.User, error) {
 	user, err := s.repo.GetByEmailAndWorkspace(ctx, email, workspaceID)
 
 	if err != nil {
 		if err.Error() == "user not found" {
-			return nil, &ErrorMessage{Error: "USER_NOT_FOUND", Message: "User not found", Timestamp: timestamppb.New(time.Now())}
+			return nil, err
 		}
-		return nil, &ErrorMessage{
-			Error:     "INTERNAL_ERROR",
-			Message:   err.Error(),
-			Timestamp: timestamppb.Now(),
-		}
+		return nil, err
 	}
 
 	return user, nil
