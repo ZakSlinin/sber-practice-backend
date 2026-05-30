@@ -5,7 +5,11 @@ import (
 	"github.com/ZakSlinin/sber-practice-backend/internal/auth/handler"
 	"github.com/ZakSlinin/sber-practice-backend/internal/auth/repository"
 	"github.com/ZakSlinin/sber-practice-backend/internal/auth/service"
+	handler2 "github.com/ZakSlinin/sber-practice-backend/internal/challenges/handler"
+	repository3 "github.com/ZakSlinin/sber-practice-backend/internal/challenges/repository"
+	service2 "github.com/ZakSlinin/sber-practice-backend/internal/challenges/service"
 	repository2 "github.com/ZakSlinin/sber-practice-backend/internal/workspace/repository"
+	"github.com/ZakSlinin/sber-practice-backend/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -50,12 +54,17 @@ func main() {
 
 	authRepo := repository.NewAuthRepository(db)
 	workspaceRepo := repository2.NewWorkspaceRepository(db)
+	challengesRepo := repository3.NewPostgresChallengesRepo(db)
 
 	authService := service.NewAuthService(authRepo, workspaceRepo)
+	challengesService := service2.NewChallengesService(challengesRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
+	challengesHandler := handler2.NewChallengesHandler(challengesService)
 
 	r := gin.Default()
+
+	// -----------CORS-----------
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -66,9 +75,17 @@ func main() {
 	}))
 
 	api := r.Group("/api")
+
 	{
 		api.POST("/login", authHandler.Login)
 		api.POST("/register", authHandler.Register)
+
+		protected := api.Group("/")
+		protected.Use(middleware.AuthMiddleware())
+
+		admin := protected.Group("/admin")
+		admin.Use(middleware.RequireRole("admin"))
+		admin.POST("/challenges", challengesHandler.CreateChallenge)
 	}
 
 	r.Run(":8080")
