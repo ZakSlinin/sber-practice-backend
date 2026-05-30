@@ -46,3 +46,36 @@ func (s *ChallengesHandler) CreateChallenge(g *gin.Context) {
 
 	g.JSON(http.StatusCreated, result)
 }
+
+func (s *ChallengesHandler) GetChallenges(g *gin.Context) {
+	workspaceIDStr := g.MustGet("workspace_id").(string)
+	workspaceID, err := uuid.Parse(workspaceIDStr)
+	if err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "invalid workspace_id"})
+		return
+	}
+
+	challenges, err := s.service.GetByWorkspace(g.Request.Context(), workspaceID)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	g.JSON(http.StatusOK, gin.H{"challenges": challenges})
+}
+
+func (s *ChallengesHandler) GetChallengeByID(g *gin.Context) {
+	id, err := uuid.Parse(g.Param("id"))
+	if err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	challenge, err := s.service.GetByID(g.Request.Context(), id)
+	if err != nil {
+		g.JSON(http.StatusNotFound, gin.H{"error": "challenge not found"})
+		return
+	}
+
+	g.JSON(http.StatusOK, challenge)
+}

@@ -83,6 +83,9 @@ func main() {
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware())
 
+		protected.GET("/challenges", challengesHandler.GetChallenges)
+		protected.GET("/challenges/:id", challengesHandler.GetChallengeByID)
+
 		admin := protected.Group("/admin")
 		admin.Use(middleware.RequireRole("admin"))
 		admin.POST("/create-challenge", challengesHandler.CreateChallenge)
