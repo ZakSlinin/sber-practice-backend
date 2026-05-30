@@ -15,14 +15,14 @@ func NewChallengesService(repo repository.ChallengesRepo) *ChallengesService {
 	return &ChallengesService{repo: repo}
 }
 
-func (s *ChallengesService) CreateChallenge(ctx context.Context, req *models.CreateChallengeRequest) (*models.Challenge, error) {
+func (s *ChallengesService) CreateChallenge(ctx context.Context, req *models.CreateChallengeRequest, workspaceID, userID uuid.UUID) (*models.Challenge, error) {
 	challenge := &models.Challenge{
 		ID:          uuid.New(),
-		WorkspaceID: req.WorkspaceID,
+		WorkspaceID: workspaceID,
 		Description: req.Description,
 		Level:       req.Level,
 		IsActive:    true,
-		CreatedBy:   req.CreatedBy,
+		CreatedBy:   userID,
 	}
 
 	return s.repo.Create(ctx, challenge)
