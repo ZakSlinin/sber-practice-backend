@@ -13,3 +13,11 @@ type Challenge struct {
 	IsActive    bool
 	CreatedBy   uuid.UUID
 }
+
+type CreateChallengeRequest struct {
+	WorkspaceID uuid.UUID
+	Title       string
+	Description string
+	Level       int
+	CreatedBy   uuid.UUID
+}
