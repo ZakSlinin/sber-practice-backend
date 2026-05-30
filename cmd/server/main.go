@@ -85,7 +85,7 @@ func main() {
 
 		admin := protected.Group("/admin")
 		admin.Use(middleware.RequireRole("admin"))
-		admin.POST("/challenges", challengesHandler.CreateChallenge)
+		admin.POST("/create-challenge", challengesHandler.CreateChallenge)
 	}
 
 	r.Run(":8080")
